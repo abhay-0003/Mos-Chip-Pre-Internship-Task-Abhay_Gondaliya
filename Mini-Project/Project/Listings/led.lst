@@ -1,0 +1,66 @@
+A51 MACRO ASSEMBLER  LED                                                                  11/28/2025 10:09:29 PAGE     1
+
+
+MACRO ASSEMBLER A51 V8.2.7.0
+OBJECT MODULE PLACED IN .\Objects\led.obj
+ASSEMBLER INVOKED BY: F:\Study\Keil\C51\BIN\A51.EXE led.a51 SET(SMALL) DEBUG PRINT(.\Listings\led.lst) OBJECT(.\Objects\
+                      led.obj) EP
+
+LOC  OBJ            LINE     SOURCE
+
+0000                   1     ORG 0000H          ; Program start address
+0000 020030            2     LJMP MAIN          ; Jump to main program
+                       3     
+                       4     ;---------------------------------------------------
+                       5     ; Interrupt Vector Table
+                       6     ;---------------------------------------------------
+0003                   7     ORG 0003H          ; External Interrupt 0 vector address
+0003 020042            8     LJMP EX0_ISR       ; Jump to Interrupt Service Routine
+                       9     
+                      10     ;---------------------------------------------------
+                      11     ; Main Program
+                      12     ;---------------------------------------------------
+0030                  13     ORG 0030H
+0030                  14     MAIN:
+0030 759066           15             MOV P1, #66H      ; Port 1 as input (Switches, active low)
+0033 75A000           16             MOV P2, #00H       ; Port 2 as output (LEDs initially OFF)
+                      17     
+0036 75A881           18             MOV IE, #81H       ; Enable EA (bit7) and EX0 (bit0)
+0039 758801           19             MOV TCON, #01H     ; IT0=1 (edge triggered), IE0=0
+                      20     
+003C                  21     MAIN_LOOP:
+003C E590             22             MOV A, P1          ; Read switches
+003E F5A0             23             MOV P2, A          ; Display switch pattern on LEDs
+0040 80FA             24             SJMP MAIN_LOOP     ; Repeat forever
+                      25     
+                      26     ;---------------------------------------------------
+                      27     ; External Interrupt 0 ISR
+                      28     ;---------------------------------------------------
+0042                  29     EX0_ISR:
+0042 E5A0             30             MOV A, P2      ; Load Port 2 into Accumulator
+0044 F4               31             CPL A          ; Complement accumulator
+0045 F5A0             32             MOV P2, A      ; Write back to LEDs
+0047 32               33             RETI           ; Return from interrupt
+                      34     
+                      35     END
+A51 MACRO ASSEMBLER  LED                                                                  11/28/2025 10:09:29 PAGE     2
+
+SYMBOL TABLE LISTING
+------ ----- -------
+
+
+N A M E             T Y P E  V A L U E   ATTRIBUTES
+
+EX0_ISR. . . . . .  C ADDR   0042H   A   
+IE . . . . . . . .  D ADDR   00A8H   A   
+MAIN . . . . . . .  C ADDR   0030H   A   
+MAIN_LOOP. . . . .  C ADDR   003CH   A   
+P1 . . . . . . . .  D ADDR   0090H   A   
+P2 . . . . . . . .  D ADDR   00A0H   A   
+TCON . . . . . . .  D ADDR   0088H   A   
+
+
+REGISTER BANK(S) USED: 0 
+
+
+ASSEMBLY COMPLETE.  0 WARNING(S), 0 ERROR(S)
