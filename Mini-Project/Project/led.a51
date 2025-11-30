@@ -12,7 +12,7 @@ LJMP EX0_ISR       ; Jump to Interrupt Service Routine
 ;---------------------------------------------------
 ORG 0030H
 MAIN:
-	//MOV P1, #66H      ; Port 1 as input (Switches, active low)
+	;MOV P1, #66H      ; Port 1 as input (Switches, active low)
 	MOV P2, #00H       ; Port 2 as output (LEDs initially OFF)
 
 	MOV IE, #81H       ; Enable EA (bit7) and EX0 (bit0)
