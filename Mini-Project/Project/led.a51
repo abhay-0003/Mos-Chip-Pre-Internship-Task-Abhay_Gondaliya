@@ -1,35 +1,50 @@
-ORG 0000H          ; Program start address
-LJMP MAIN          ; Jump to main program
+ORG 0000H
+SJMP MAIN          ; Jump to main program
 
-;---------------------------------------------------
-; Interrupt Vector Table
-;---------------------------------------------------
-ORG 0003H          ; External Interrupt 0 vector address
-LJMP EX0_ISR       ; Jump to Interrupt Service Routine
+;--------------------------
+; INT0 Interrupt Vector
+;--------------------------
+ORG 0003H
+AJMP INT0_ISR
 
-;---------------------------------------------------
-; Main Program
-;---------------------------------------------------
-ORG 0030H
+;==========================
+;       VARIABLES
+;==========================
+FLAG BIT 20H       ; Flag stored in BIT-ADDRESSABLE RAM
+
+;==========================
+;       MAIN PROGRAM
+;==========================
 MAIN:
-	;MOV P1, #66H      ; Port 1 as input (Switches, active low)
-	MOV P2, #00H       ; Port 2 as output (LEDs initially OFF)
+    MOV P2, #00H        ; LEDs off
 
-	MOV IE, #81H       ; Enable EA (bit7) and EX0 (bit0)
-	MOV TCON, #01H     ; IT0=1 (edge triggered), IE0=0
+    MOV IE, #81H        ; EA=1, EX0=1
+    MOV TCON, #01H      ; IT0=1 ? edge triggered
+
+    CLR FLAG            ; Initially flag = 0 (normal mode)
 
 MAIN_LOOP:
-	MOV A, P1          ; Read switches
-	MOV P2, A          ; Display switch pattern on LEDs
-	SJMP MAIN_LOOP     ; Repeat forever
+    MOV A, P1
+	MOV P2, A
+	JB FLAG, TOGGLE   ; If FLAG = 1 ? toggle mode
+	SJMP MAIN_LOOP
+TOGGLE:
+	CPL A
+	MOV P2, A
+	JNB FLAG, MAIN_LOOP
+	MOV A, P1
+	SJMP TOGGLE
+    
+;==========================
+;     INTERRUPT SERVICE
+;==========================
+INT0_ISR:
 
-;---------------------------------------------------
-; External Interrupt 0 ISR
-;---------------------------------------------------
-EX0_ISR:
-	MOV A, P2      ; Load Port 2 into Accumulator
-	CPL A          ; Complement accumulator
-	MOV P2, A      ; Write back to LEDs
-	RETI           ; Return from interrupt
+    CPL FLAG             ; Toggle mode flag (0?1, 1?0)
+                         ; No debounce here, can add if needed
+
+    RETI
+
+
 
 END

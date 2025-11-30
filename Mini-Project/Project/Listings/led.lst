@@ -1,4 +1,4 @@
-A51 MACRO ASSEMBLER  LED                                                                  11/28/2025 10:09:29 PAGE     1
+A51 MACRO ASSEMBLER  LED                                                                  11/30/2025 14:48:05 PAGE     1
 
 
 MACRO ASSEMBLER A51 V8.2.7.0
@@ -8,42 +8,57 @@ ASSEMBLER INVOKED BY: F:\Study\Keil\C51\BIN\A51.EXE led.a51 SET(SMALL) DEBUG PRI
 
 LOC  OBJ            LINE     SOURCE
 
-0000                   1     ORG 0000H          ; Program start address
-0000 020030            2     LJMP MAIN          ; Jump to main program
+0000                   1     ORG 0000H
+0000 8003              2     SJMP MAIN          ; Jump to main program
                        3     
-                       4     ;---------------------------------------------------
-                       5     ; Interrupt Vector Table
-                       6     ;---------------------------------------------------
-0003                   7     ORG 0003H          ; External Interrupt 0 vector address
-0003 020042            8     LJMP EX0_ISR       ; Jump to Interrupt Service Routine
+                       4     ;--------------------------
+                       5     ; INT0 Interrupt Vector
+                       6     ;--------------------------
+0003                   7     ORG 0003H
+0003 0123              8     AJMP INT0_ISR
                        9     
-                      10     ;---------------------------------------------------
-                      11     ; Main Program
-                      12     ;---------------------------------------------------
-0030                  13     ORG 0030H
-0030                  14     MAIN:
-0030 759066           15             MOV P1, #66H      ; Port 1 as input (Switches, active low)
-0033 75A000           16             MOV P2, #00H       ; Port 2 as output (LEDs initially OFF)
-                      17     
-0036 75A881           18             MOV IE, #81H       ; Enable EA (bit7) and EX0 (bit0)
-0039 758801           19             MOV TCON, #01H     ; IT0=1 (edge triggered), IE0=0
+                      10     ;==========================
+                      11     ;       VARIABLES
+                      12     ;==========================
+  0020                13     FLAG BIT 20H       ; Flag stored in BIT-ADDRESSABLE RAM
+                      14     
+                      15     ;==========================
+                      16     ;       MAIN PROGRAM
+                      17     ;==========================
+0005                  18     MAIN:
+0005 75A000           19         MOV P2, #00H        ; LEDs off
                       20     
-003C                  21     MAIN_LOOP:
-003C E590             22             MOV A, P1          ; Read switches
-003E F5A0             23             MOV P2, A          ; Display switch pattern on LEDs
-0040 80FA             24             SJMP MAIN_LOOP     ; Repeat forever
+0008 75A881           21         MOV IE, #81H        ; EA=1, EX0=1
+000B 758801           22         MOV TCON, #01H      ; IT0=1 ? edge triggered
+                      23     
+000E C220             24         CLR FLAG            ; Initially flag = 0 (normal mode)
                       25     
-                      26     ;---------------------------------------------------
-                      27     ; External Interrupt 0 ISR
-                      28     ;---------------------------------------------------
-0042                  29     EX0_ISR:
-0042 E5A0             30             MOV A, P2      ; Load Port 2 into Accumulator
-0044 F4               31             CPL A          ; Complement accumulator
-0045 F5A0             32             MOV P2, A      ; Write back to LEDs
-0047 32               33             RETI           ; Return from interrupt
-                      34     
-                      35     END
-A51 MACRO ASSEMBLER  LED                                                                  11/28/2025 10:09:29 PAGE     2
+0010                  26     MAIN_LOOP:
+0010 E590             27         MOV A, P1
+0012 F5A0             28             MOV P2, A
+0014 202002           29             JB FLAG, TOGGLE   ; If FLAG = 0 ? normal mode
+0017 80F7             30             SJMP MAIN_LOOP
+0019                  31     TOGGLE:
+0019 F4               32             CPL A
+001A F5A0             33             MOV P2, A
+001C 3020F1           34             JNB FLAG, MAIN_LOOP
+001F E590             35             MOV A, P1
+0021 80F6             36             SJMP TOGGLE
+                      37         
+                      38     ;==========================
+                      39     ;     INTERRUPT SERVICE
+                      40     ;==========================
+0023                  41     INT0_ISR:
+                      42     
+0023 B220             43         CPL FLAG             ; Toggle mode flag (0?1, 1?0)
+                      44                              ; No debounce here, can add if needed
+                      45     
+0025 32               46         RETI
+                      47     
+                      48     
+                      49     
+                      50     END
+A51 MACRO ASSEMBLER  LED                                                                  11/30/2025 14:48:05 PAGE     2
 
 SYMBOL TABLE LISTING
 ------ ----- -------
@@ -51,13 +66,15 @@ SYMBOL TABLE LISTING
 
 N A M E             T Y P E  V A L U E   ATTRIBUTES
 
-EX0_ISR. . . . . .  C ADDR   0042H   A   
+FLAG . . . . . . .  B ADDR   0024H.0 A   
 IE . . . . . . . .  D ADDR   00A8H   A   
-MAIN . . . . . . .  C ADDR   0030H   A   
-MAIN_LOOP. . . . .  C ADDR   003CH   A   
+INT0_ISR . . . . .  C ADDR   0023H   A   
+MAIN . . . . . . .  C ADDR   0005H   A   
+MAIN_LOOP. . . . .  C ADDR   0010H   A   
 P1 . . . . . . . .  D ADDR   0090H   A   
 P2 . . . . . . . .  D ADDR   00A0H   A   
 TCON . . . . . . .  D ADDR   0088H   A   
+TOGGLE . . . . . .  C ADDR   0019H   A   
 
 
 REGISTER BANK(S) USED: 0 
